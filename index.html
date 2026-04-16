@@ -66,10 +66,11 @@
         class="w-full text-center px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition-all placeholder:text-gray-400">
     </div>
 
-    <!-- Row 3: Text Position Slider (New) -->
+    <!-- Row 3: Text Position Slider -->
     <div class="flex items-center gap-3">
       <span class="text-xs font-bold w-16 text-gray-500">Text Y</span>
-      <input type="range" id="posRange" min="100" max="1350" step="10" value="1250" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+      <!-- Updated max to 1850 to match the new canvas height (1950) -->
+      <input type="range" id="posRange" min="100" max="1850" step="10" value="1250" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
       <span id="posValue" class="text-xs font-mono text-gray-400 w-10 text-right">1250</span>
     </div>
 
@@ -101,6 +102,14 @@
       text: '',
       textPos: 1250 // Text Y Position
     };
+
+    // --- FRAME IMAGE ---
+    // REPLACE THE URL BELOW WITH YOUR GITHUB RAW LINK
+    // Example: https://github.com/shamsu-ca/arts-frame-/blob/ed0e09a6c2b2c1d5412e3ebae6c1d05e1e332123/frame.png
+    const frameImg = new Image();
+    // CrossOrigin is important if loading from GitHub to allow download
+    frameImg.crossOrigin = "Anonymous"; 
+    frameImg.src = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/frame.png'; 
 
     // --- DOM Elements ---
     const canvas = document.getElementById('canvas');
@@ -141,19 +150,27 @@
     // --- Drawing Logic ---
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.save();
       
+      // 1. Draw User Uploaded Photo (Bottom Layer)
+      ctx.save();
       if (state.img) {
         ctx.translate(canvas.width / 2 + state.x, canvas.height / 2 + state.y);
         ctx.scale(state.scale, state.scale);
         ctx.drawImage(state.img, -state.img.width / 2, -state.img.height / 2);
       } else {
+        // Placeholder background
         ctx.fillStyle = '#e2e8f0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
       ctx.restore();
 
-      // Draw Text using dynamic state.textPos
+      // 2. Draw Frame Overlay (Middle Layer)
+      // We check if image is loaded and valid
+      if (frameImg.complete && frameImg.naturalHeight !== 0) {
+         ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+      }
+
+      // 3. Draw Text (Top Layer)
       if (state.text) {
         ctx.save();
         ctx.font = `bold ${SETTINGS.fontSize}px ${SETTINGS.fontFamily}`;
@@ -260,7 +277,7 @@
       draw();
     });
 
-    // 4. Text Position Slider (New)
+    // 4. Text Position Slider
     posRange.addEventListener('input', (e) => {
       state.textPos = parseInt(e.target.value);
       posValue.textContent = state.textPos;
