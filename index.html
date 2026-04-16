@@ -36,12 +36,12 @@
   <!-- 2. Preview Box -->
   <div id="canvasWrapper" class="relative flex-grow bg-gray-200 flex items-center justify-center overflow-hidden p-4">
     <!-- 
-      aspect-ratio ensures the canvas is NEVER stretched. 
-      w-full and h-auto (or max-h-full) make it fit the screen.
+      aspect-ratio: 2400/3000 (which is 4:5) ensures the canvas 
+      is NEVER stretched and maintains the correct shape.
     -->
     <canvas id="canvas" 
             class="max-w-full max-h-full shadow-xl bg-white"
-            style="aspect-ratio: 1080 / 1950;">
+            style="aspect-ratio: 2400 / 3000;">
     </canvas>
     
     <!-- Placeholder -->
@@ -73,15 +73,7 @@
         class="w-full text-center px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black transition-all placeholder:text-gray-400">
     </div>
 
-    <!-- Row 3: Text Position Slider -->
-    <div class="flex items-center gap-3">
-      <span class="text-xs font-bold w-16 text-gray-500">Text Y</span>
-      <!-- Range adjusted to ensure text can reach bottom of 1950px canvas -->
-      <input type="range" id="posRange" min="100" max="1850" step="10" value="1250" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-      <span id="posValue" class="text-xs font-mono text-gray-400 w-10 text-right">1250</span>
-    </div>
-
-    <!-- Row 4: Download Button -->
+    <!-- Row 3: Download Button -->
     <button id="downloadBtn" class="w-full bg-black text-white font-semibold py-3.5 rounded-xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
       Download
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -92,10 +84,10 @@
   <script>
     /* --- SETTINGS --- */
     const SETTINGS = {
-      canvasWidth: 1080,
-      canvasHeight: 1950,
+      canvasWidth: 2400,  // Updated Width
+      canvasHeight: 3000, // Updated Height
       textColor: '#000000',
-      fontSize: 55,
+      fontSize: 80,       // Increased font size slightly for higher res
       shadow: false,
       fontFamily: 'Inter, sans-serif'
     };
@@ -107,7 +99,8 @@
       y: 0,       // Pan Y
       scale: 1,   // Zoom
       text: '',
-      textPos: 1250 // Text Y Position
+      // Fixed position near bottom (Canvas height is 3000)
+      textPos: 2750 
     };
 
     // --- FRAME IMAGE (Local File) ---
@@ -121,8 +114,6 @@
     const wrapper = document.getElementById('canvasWrapper');
     const fileInput = document.getElementById('imageInput');
     const zoomRange = document.getElementById('zoomRange');
-    const posRange = document.getElementById('posRange');
-    const posValue = document.getElementById('posValue');
     const nameInput = document.getElementById('nameInput');
     const downloadBtn = document.getElementById('downloadBtn');
     const placeholderMsg = document.getElementById('placeholderMsg');
@@ -204,7 +195,7 @@
       const dy = pos.y - startY;
 
       // Convert screen pixels to canvas resolution pixels
-      // The CSS ensures canvas is not stretched, so ratio calculation is accurate
+      // The CSS aspect-ratio ensures this ratio is accurate
       const scaleFactor = canvas.width / canvas.clientWidth;
 
       state.x += dx * scaleFactor;
@@ -269,14 +260,7 @@
       draw();
     });
 
-    // 4. Text Position Slider
-    posRange.addEventListener('input', (e) => {
-      state.textPos = parseInt(e.target.value);
-      posValue.textContent = state.textPos;
-      draw();
-    });
-
-    // 5. Download
+    // 4. Download
     downloadBtn.addEventListener('click', () => {
       if (!state.img) {
         alert('Please upload an image first');
