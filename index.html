@@ -34,11 +34,18 @@
   </header>
 
   <!-- 2. Preview Box -->
-  <div id="canvasWrapper" class="relative flex-grow bg-gray-200 flex items-center justify-center overflow-hidden">
-    <canvas id="canvas" class="max-w-full max-h-full shadow-xl"></canvas>
+  <div id="canvasWrapper" class="relative flex-grow bg-gray-200 flex items-center justify-center overflow-hidden p-4">
+    <!-- 
+      aspect-ratio ensures the canvas is NEVER stretched. 
+      w-full and h-auto (or max-h-full) make it fit the screen.
+    -->
+    <canvas id="canvas" 
+            class="max-w-full max-h-full shadow-xl bg-white"
+            style="aspect-ratio: 1080 / 1950;">
+    </canvas>
     
     <!-- Placeholder -->
-    <div id="placeholderMsg" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">
+    <div id="placeholderMsg" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50 p-10 text-center">
       <p class="text-sm text-gray-500 font-medium">Tap Upload to Start</p>
     </div>
   </div>
@@ -69,7 +76,7 @@
     <!-- Row 3: Text Position Slider -->
     <div class="flex items-center gap-3">
       <span class="text-xs font-bold w-16 text-gray-500">Text Y</span>
-      <!-- Updated max to 1850 to match the new canvas height (1950) -->
+      <!-- Range adjusted to ensure text can reach bottom of 1950px canvas -->
       <input type="range" id="posRange" min="100" max="1850" step="10" value="1250" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer">
       <span id="posValue" class="text-xs font-mono text-gray-400 w-10 text-right">1250</span>
     </div>
@@ -122,30 +129,14 @@
 
     // --- Initialization ---
     function init() {
+      // Set internal resolution (High Quality)
       canvas.width = SETTINGS.canvasWidth;
       canvas.height = SETTINGS.canvasHeight;
-      resizeCanvasCSS();
-      window.addEventListener('resize', resizeCanvasCSS);
       
-      // Redraw when frame loads to ensure it appears
+      // Redraw when frame loads
       frameImg.onload = draw;
       
       draw();
-    }
-
-    function resizeCanvasCSS() {
-      const rect = wrapper.getBoundingClientRect();
-      const aspect = SETTINGS.canvasWidth / SETTINGS.canvasHeight;
-      let cssWidth = rect.width;
-      let cssHeight = cssWidth / aspect;
-      
-      if (cssHeight > rect.height) {
-        cssHeight = rect.height;
-        cssWidth = cssHeight * aspect;
-      }
-      
-      canvas.style.width = cssWidth + 'px';
-      canvas.style.height = cssHeight + 'px';
     }
 
     // --- Drawing Logic ---
@@ -166,7 +157,6 @@
       ctx.restore();
 
       // 2. Draw Frame Overlay (Middle Layer)
-      // Draws the local frame.png over the photo
       if (frameImg.complete && frameImg.naturalHeight !== 0) {
          ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
       }
@@ -214,6 +204,7 @@
       const dy = pos.y - startY;
 
       // Convert screen pixels to canvas resolution pixels
+      // The CSS ensures canvas is not stretched, so ratio calculation is accurate
       const scaleFactor = canvas.width / canvas.clientWidth;
 
       state.x += dx * scaleFactor;
@@ -291,8 +282,12 @@
         alert('Please upload an image first');
         return;
       }
+      
+      // Name file based on input text, or default to 'frame'
+      const filename = (state.text.trim() || 'frame') + '.png';
+      
       const link = document.createElement('a');
-      link.download = `mic-frame-${Date.now()}.png`;
+      link.download = filename;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
